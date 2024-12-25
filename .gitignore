@@ -59,3 +59,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+*.obj
+*.sbr
+*.1.tlog
+*.txt
+*.exe.recipe
