@@ -28,7 +28,9 @@ public:
 	// void THFilter(int u,int v,int u1,int v1);//梯形高通滤波
 	// void ZLFilter(int u,int v,int n);//指数低通滤波
 	// void ZHFilter(int u,int v,int n);//指数高通滤波
-     void FirstQuickFourier();//实现图像快速傅立叶变换(未进行平移)	
+     void FirstQuickFourier();//实现图像快速傅立叶变换(未进行平移)
+	 
+
 protected:
 
 };

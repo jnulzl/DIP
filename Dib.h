@@ -54,10 +54,10 @@ public:
 	//////////////////////////////////////////////////////
 
 	BOOL CreateDIB(char *fileName,int *m_pData,DWORD dwWidth,DWORD dwHeight,int nBits,int IsFitsFile = 0);
-	BOOL CreateDIB(char *fileName,DWORD dwWidth,DWORD dwHeight,int nBits);
+	BOOL CreateDIB(char *fileName,DWORD dwWidth,DWORD dwHeight,int nBits);	
 	int Rand(int a,int b);
 
-	 // 获取每行像素所占字节数
+	 // 获取每列像素所占字节数
     UINT GetColByte();
 	//获取位图信息指针
 	LPBITMAPINFO GetBmpInfo();
@@ -95,6 +95,10 @@ public:
     BOOL IsValid();  
 
 
+	// 清理空间
+    void Empty(BOOL bFlag = TRUE);
+
+
 protected:
     // 计算位图颜色表长度
     DWORD CalcRgbQuadLength();
@@ -102,8 +106,8 @@ protected:
     // 根据颜色表生成调色板
     BOOL MakePalette();
 
-    // 清理空间
-    void Empty(BOOL bFlag = TRUE);
+    /*// 清理空间
+    void Empty(BOOL bFlag = TRUE);*/
 
 private:
     // 位图文件名

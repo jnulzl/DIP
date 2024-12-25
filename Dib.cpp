@@ -289,7 +289,6 @@ LPBYTE CDib::GetBmpPointer()
     return m_lpDib;
 }
 
-
 // 函数功能： 获取位图调色板
 // 输入参数： 无
 // 返回值：   位图调色板
@@ -772,12 +771,17 @@ int CDib::Rand(int a,int b)
 }
 //=======================================================
 // 函数功能： 创建一个新的位图
-// 输入参数： fileName:图像文件名；lWidth:图像宽度；lHeight:图像高度；nBits:像素位数
+// 输入参数： fileName:图像文件名(包括路径)；lWidth:图像宽度；lHeight:图像高度；nBits:像素位数
 // 返回值：   无
 //=======================================================
 BOOL CDib::CreateDIB(char *fileName,DWORD lWidth,DWORD lHeight,int nBits)
-{
-	
+{	
+	if(nBits !=8 && nBits !=24)
+	{
+		AfxMessageBox("像素为数只能是8或者24！");
+		return false;
+	}
+
 	if(m_bValid)
 		// 释放原有位图空间
 		Empty(TRUE);
@@ -804,7 +808,7 @@ BOOL CDib::CreateDIB(char *fileName,DWORD lWidth,DWORD lHeight,int nBits)
     // 为灰度位图分配空间，并初始化为0
     LPBYTE lpGradeBmp = (LPBYTE)new BYTE[dwGradeBmpSize];
     memset(lpGradeBmp, 0, dwGradeBmpSize);
-
+	
     // 设置灰度位图信息头
     LPBITMAPINFOHEADER lpGradeBmpInfoHeader = (LPBITMAPINFOHEADER)(lpGradeBmp);
     lpGradeBmpInfoHeader->biBitCount = nBits;
@@ -837,12 +841,14 @@ BOOL CDib::CreateDIB(char *fileName,DWORD lWidth,DWORD lHeight,int nBits)
     // 灰度位图数据处理
     LPBYTE lpGradeBmpData = (LPBYTE)(lpGradeBmp + sizeof(BITMAPINFOHEADER) 
                                      + sizeof(RGBQUAD) * 256);
+
+	//memset(lpGradeBmpData,255,uGradeBmpLineByte*lHeight);	
     // 对数据区域赋值
+
     for(int i = 0; i < lHeight; i++)
     {
         for(int j = 0; j < lWidth; j++)
-        {
-			
+        {						
 			if(nBits == 24)
 			{
 				lpGradeBmpData[i * uGradeBmpLineByte + 3 * j] = Rand(0,80);
@@ -851,7 +857,6 @@ BOOL CDib::CreateDIB(char *fileName,DWORD lWidth,DWORD lHeight,int nBits)
 			}
 			else
 				lpGradeBmpData[i * uGradeBmpLineByte + j] = Rand(100,200);
-
         }
     }
 
@@ -881,6 +886,11 @@ BOOL CDib::CreateDIB(char *fileName,DWORD lWidth,DWORD lHeight,int nBits)
 //=======================================================
 BOOL CDib::CreateDIB(char *fileName,int *m_pData,DWORD lWidth,DWORD lHeight,int nBits,int IsFitsFile)
 {
+	if(nBits !=8 && nBits !=24)
+	{
+		AfxMessageBox("像素为数只能是8或者24！");
+		return false;
+	}
 	
 	if(m_bValid)
 		// 释放原有位图空间
@@ -982,3 +992,5 @@ BOOL CDib::CreateDIB(char *fileName,int *m_pData,DWORD lWidth,DWORD lHeight,int 
 
 	return m_bValid;
 }
+
+	

@@ -27,6 +27,7 @@
 #include "DlgBrightChange.h"
 #include "DlgMosaic.h"
 #include "DlgHist.h"
+#include "DlgImageArgument.h"
 //////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
@@ -118,7 +119,13 @@ BEGIN_MESSAGE_MAP(CDIP1View, CScrollView)
 	ON_COMMAND(ID_CV_LAPLACIAN, OnCvLaplacian)
 	ON_COMMAND(ID_CV_PCFACEDETECTION, OnCvPcFaceDetection)
 	ON_COMMAND(ID_FACE_DETECTIONYUSHIQI, OnFaceDetectionYushiqi)
-	ON_COMMAND(IDDEMO, OnDemo)
+	ON_COMMAND(ID_CV_SIMPLEBLUR, OnCvSimpleBlur)
+	ON_COMMAND(ID_CVMEDIANBLUR, OnCvMedianBlur)
+	ON_COMMAND(ID_CVGAUSSIANBLUR, OnCvGaussianBlur)
+	ON_COMMAND(ID_CVPLOTHIST, OnCvPlotHist)
+	ON_COMMAND(CD_CVHISTEqualize, OnCvHistEqualize)
+	ON_COMMAND(ID_NEW_IMAGE, OnNewImage)
+	ON_COMMAND(ID_CLEAR_IMAGE, OnClearImage)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CScrollView::OnFilePrint)
@@ -171,6 +178,7 @@ void CDIP1View::OnDraw(CDC* pDC)
 			topLeftY = 0;
 		//显示图像
 		m_dib.Draw(pDC,CPoint(topLeftX,topLeftY),CSize(SWidth,SHeight));
+		SetScrollSizes(MM_TEXT, CSize(SWidth, SHeight));
 	}
 }
 
@@ -217,14 +225,25 @@ CDIP1Doc* CDIP1View::GetDocument() // non-debug version is inline
 /////////////////////////////////////////////////////////////////////////////
 // CDIP1View message handlers
 
+//CPoint CDIP1View::getxy()
+//{
+//	CPoint p;
+//	GetCursorPos(&p);
+//	return p;
+//}
+//int CDIP1View::getPixel()
+//{
+//	return 0;
+//}
 
 void CDIP1View::OnInitialUpdate() 
 {
-	CScrollView::OnInitialUpdate();
-	
+	CScrollView::OnInitialUpdate();	
 	// TODO: Add your specialized code here and/or call the base class
-	SetScrollSizes(MM_TEXT, CSize(2200,2200));
-	//SetScrollSizes(MM_TEXT,GetDocument()->GetD);
+	CRect windowsSize;
+	GetWindowRect(&windowsSize);
+	SetScrollSizes(MM_TEXT, CSize(windowsSize.Width(), windowsSize.Height()));			
+	//SetScrollSizes(MM_TEXT, CSize(windowsSize.Height(), windowsSize.Width()));	
 }
 //提示消息函数
 int CDIP1View::alert(int temp)
@@ -285,7 +304,7 @@ void CDIP1View::OnOpenImage()
 	// TODO: Add your command handler code here
 
 	//定义过滤文件类型
-	static char filePath[] = "BMP文件(*.bmp)|*.bmp|PNG文件(*.png)|*.png|JPG文件(*.jpg)|*.jpg|JPEG文件(*.jpeg)|*.jpeg|TIFF文件(*.tiff)|*.tiff|TIF文件(*.tif)|*.tif|FITS文件(*.fits)|*.fits|全部文件(*.*)|*.*|";
+	static char filePath[] = "BMP文件(*.bmp)|*.bmp|PNG文件(*.png)|*.png|PPM文件(*.ppm)|*.ppm|PGM文件(*.pgm)|*.pgm|PBM文件(*.pbm)|*.pbm|JPG文件(*.jpg)|*.jpg|FITS文件(*.fits)|*.fits|IMG文件(*.IMG)|*.IMG|JPEG文件(*.jpeg)|*.jpeg|TIFF文件(*.tiff)|*.tiff|TIF文件(*.tif)|*.tif|全部文件(*.*)|*.*|";
 	//定义文件对话框对象
 	CFileDialog dlg(TRUE,NULL,NULL,OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,filePath);
 	dlg.m_ofn.lpstrTitle = "打开图像";
@@ -323,7 +342,6 @@ void CDIP1View::OnOpenImage()
 		//***********************其实该句可以不要**********************
 		//初始化非全屏显示
 	//	m_dib.isFullScreen = false;
-
 	}
 	//刷新屏幕
 	Invalidate(1);
@@ -337,9 +355,11 @@ void CDIP1View::OnSaveImage()
 	if(alert(1))
 		return;
 	//定义过滤文件类型
-	static char filePath[] = "BMP文件(*.bmp)|*.bmp|PNG文件(*.png)|*.png|JPG文件(*.jpg)|*.jpg|JPEG文件(*.jpeg)|*.jpeg|TIFF文件(*.tiff)|*.tiff|TIF文件(*.tif)|*.tif|全部文件(*.*)|*.*|";
+	static char filePath[] = "BMP文件(*.bmp)|*.bmp|PNG文件(*.png)|*.png|PPM文件(*.ppm)|*.ppm|PGM文件(*.pgm)|*.pgm|PBM文件(*.pbm)|*.pbm|JPG文件(*.jpg)|*.jpg|JPEG文件(*.jpeg)|*.jpeg|TIFF文件(*.tiff)|*.tiff|TIF文件(*.tif)|*.tif|全部文件(*.*)|*.*|";
 	//定义文件对话框对象
-	CFileDialog dlg(FALSE,"bmp","img",OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,filePath);
+	LPCTSTR imgName = m_dib.GetFileName();
+	//AfxMessageBox(imgName);
+	CFileDialog dlg(FALSE,"bmp",imgName,OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,filePath);
 	dlg.m_ofn.lpstrTitle = "图像另存为";
 	CString fileName;
 	//运行打开文件对话框
@@ -1528,9 +1548,9 @@ void CDIP1View::OnCvFaceDetection()
 	//2、开始图像处理
 	int faceNum;
 	//调用OpenCV1.0自带的人脸检测函数
-	// temp = m_dib.cvFaceDec(temp,&faceNum);
+	//temp = m_dib.cvFaceDec(temp,&faceNum);
 	//调用深大于仕琪的人脸检测函数
-	 temp = m_dib.cvFaceDecYuShiQi(temp,&faceNum);
+	temp = m_dib.cvFaceDecYuShiQi(temp,&faceNum);
 	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
 	m_dib.cvDataToBmp(temp);
 	//输出人脸个数
@@ -1543,7 +1563,7 @@ void CDIP1View::OnCvFaceDetection()
 	else
 		AfxMessageBox("未检测到人脸！"); 
 
-	//4、释放上面创建的IplImage图像
+	//4、释放前两步创建的IplImage图像
 	cvReleaseImage(&temp);//释放temp	
 	
 	 //刷新屏幕
@@ -1649,12 +1669,18 @@ void CDIP1View::OnCvDilate()
 void CDIP1View::OnCvSobelEdge() 
 {
 	// TODO: Add your command handler code here
-	if(alert(2))
+	if(alert(1))
  		return;
 	//**************************OpenCV图像处理主要步骤*****************************
 	
-	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是灰度图
-	IplImage *temp = m_dib.cvBmpToIplImage(1);
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
 
 	//2、开始图像处理
 	temp = m_dib.cvSobelEdge(temp);
@@ -1675,25 +1701,38 @@ void CDIP1View::OnCvSobelEdge()
 void CDIP1View::OnCvCannyEdge() 
 {
 	// TODO: Add your command handler code here
-	if(alert(2))
+	if(alert(1))
  		return;
 	//**************************OpenCV图像处理主要步骤*****************************
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
 	
-	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是灰度图
-	IplImage *temp = m_dib.cvBmpToIplImage(1);
+	//2、开始图像处理
+	if(1 == GrayOrColor)
+		temp = m_dib.cvCannyEdge(temp);
+	else
+	{
+			IplImage *tempB = cvCreateImage(cvGetSize(temp),IPL_DEPTH_8U,1);
+			IplImage *tempG = cvCreateImage(cvGetSize(temp),IPL_DEPTH_8U,1);
+			IplImage *tempR = cvCreateImage(cvGetSize(temp),IPL_DEPTH_8U,1);
+			cvSplit(temp,tempB,tempG,tempR,0);
+			cvMerge(m_dib.cvCannyEdge(tempB),m_dib.cvCannyEdge(tempG),m_dib.cvCannyEdge(tempR),0,temp);			
+			cvReleaseImage(&tempB);
+			cvReleaseImage(&tempG);
+			cvReleaseImage(&tempR);
+	}
 	
-	//2、创建临时图像
-	IplImage *CannyGray = cvCreateImage(cvGetSize(temp),IPL_DEPTH_8U,1);
-	
-	//3、开始图像处理
-	cvCanny(temp,CannyGray,50,150,3);
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
 
-	//4、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
-	m_dib.cvDataToBmp(CannyGray);
-
-	//5、释放前两步创建的IplImage图像
+	//4、释放前两步创建的IplImage图像
 	cvReleaseImage(&temp);//释放temp
-	cvReleaseImage(&CannyGray);//释放CannyGray
 	
 	 //刷新屏幕
  	Invalidate(1);
@@ -1706,12 +1745,17 @@ void CDIP1View::OnCvCannyEdge()
 void CDIP1View::OnCvLaplacian() 
 {
 	// TODO: Add your command handler code here
-	if(alert(2))
+	if(alert(1))
  		return;
 	//**************************OpenCV图像处理主要步骤*****************************
-	
-	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是灰度图
-	IplImage *temp = m_dib.cvBmpToIplImage(1);
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
 
 	//2、开始图像处理
 	temp = m_dib.cvLaplacianEdge(temp);
@@ -1760,19 +1804,245 @@ void CDIP1View::OnCvPcFaceDetection()
 	// TODO: Add your command handler code here
 	int faceNum;//记录检测到的人脸个数
 	m_dib.PcFaceDetection(&faceNum);
+	//输出人脸数目
+	/*CString  str; 
+	if(faceNum>0)
+	{
+		str.Format("共检测到:%d个人脸！",faceNum); 
+		AfxMessageBox(str); 
+	}
+	else
+		AfxMessageBox("未检测到人脸！"); */
 }
-
+//基于深大的摄像头人脸检测
 void CDIP1View::OnFaceDetectionYushiqi() 
 {
 	// TODO: Add your command handler code here
 	int faceNum;//记录检测到的人脸个数
 	m_dib.PcFaceDetectionYuShiQi(&faceNum);
+	//输出人脸数目
+	/*CString  str; 
+	if(faceNum>0)
+	{
+		str.Format("共检测到:%d个人脸！",faceNum); 
+		AfxMessageBox(str); 
+	}
+	else
+		AfxMessageBox("未检测到人脸！"); */
+}
+
+//简单无缩放模糊
+
+//简单滤波
+void CDIP1View::OnCvSimpleBlur() 
+{
+	// TODO: Add your command handler code here
+	if(alert(1))
+ 		return;
+	//**************************OpenCV图像处理主要步骤*****************************
+	
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
+
+	//2、开始图像处理
+	CDlgMedianFilter Mydlg;
+	int ret = Mydlg.DoModal();
+	if(IDOK == ret)//判断是否点击的是确定按钮
+	{
+		int Height = Mydlg.m_temp_height;
+		int Width = Mydlg.m_temp_width;
+		temp = m_dib.cvSmoothBlur(temp,CV_BLUR,Width,Height);
+	}
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
+
+	//4、释放前两步创建的IplImage图像
+	cvReleaseImage(&temp);//释放temp
+	
+	 //刷新屏幕
+ 	Invalidate(1);
+}
+
+//高斯滤波
+void CDIP1View::OnCvGaussianBlur() 
+{
+	// TODO: Add your command handler code here
+	if(alert(1))
+ 		return;
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
+
+	//2、开始图像处理
+	temp = m_dib.cvSmoothBlur(temp,CV_GAUSSIAN,5,5);
+	
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
+
+	//4、释放前两步创建的IplImage图像
+	cvReleaseImage(&temp);//释放temp
+	
+	 //刷新屏幕
+ 	Invalidate(1);
+}
+
+//中值滤波
+void CDIP1View::OnCvMedianBlur() 
+{
+	// TODO: Add your command handler code here
+	if(alert(1))
+ 		return;
+	//**************************OpenCV图像处理主要步骤*****************************
+	
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
+
+	//2、开始图像处理
+	CDlgMedianFilter Mydlg;
+	int ret = Mydlg.DoModal();
+	if(IDOK == ret)//判断是否点击的是确定按钮
+	{
+		int Height = Mydlg.m_temp_height;
+		int Width = Mydlg.m_temp_width;
+		temp = m_dib.cvSmoothBlur(temp,CV_MEDIAN,Width,Height);
+	}
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
+
+	//4、释放前两步创建的IplImage图像
+	cvReleaseImage(&temp);//释放temp
+	
+	 //刷新屏幕
+ 	Invalidate(1);
 }
 
 
-
-void CDIP1View::OnDemo() 
+//OpenCV绘制灰度图像直方图
+void CDIP1View::OnCvPlotHist() 
 {
 	// TODO: Add your command handler code here
-	AfxMessageBox("今天是2016年5月5日！"); 
+	if(alert(1))
+ 		return;
+	//**************************OpenCV图像处理主要步骤*****************************
+	
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
+
+	//2、开始图像处理
+	m_dib.plotHistogram(temp);
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
+
+	//4、释放前两步创建的IplImage图像
+	cvReleaseImage(&temp);//释放temp
+	
+	 //刷新屏幕
+ 	Invalidate(1);
+}
+
+void CDIP1View::OnCvHistEqualize() 
+{
+	// TODO: Add your command handler code here
+	if(alert(1))
+ 		return;
+	//**************************OpenCV图像处理主要步骤*****************************
+	
+	//0、判断当前图像是彩图还是灰度图
+	int GrayOrColor;
+	if(m_dib.IsGrade())
+		GrayOrColor = 1;
+	else
+		GrayOrColor = 3;
+	//1、把当前bmp图像转化为IplImage图像。1：表示当前bmp图像是灰度图；3：表示当前bmp图像是彩色图
+	IplImage *temp = m_dib.cvBmpToIplImage(GrayOrColor);
+
+	//2、开始图像处理
+	m_dib.HistEqualize(temp);
+	//3、将处理后的图像(一般指第2步创建的图像)数据赋到bmp图像数据
+	m_dib.cvDataToBmp(temp);
+
+	//4、释放前两步创建的IplImage图像
+	cvReleaseImage(&temp);//释放temp
+	
+	 //刷新屏幕
+ 	Invalidate(1);
+}
+
+/*
+功能：
+	新建图像
+*/
+void CDIP1View::OnNewImage() 
+{
+	// TODO: Add your command handler code here
+	CDlgImageArgument Mydlg;
+	int ret = Mydlg.DoModal();
+	if(IDOK == ret)//判断是否点击的是确定按钮
+	{
+		UINT width = Mydlg.m_ImageWidth;
+		UINT height = Mydlg.m_ImageHeight;
+		UINT nBits = Mydlg.m_ImageNBIts;
+		CString fileName = Mydlg.m_filePath;
+		//****************创建图像并将其保存到文件fileName**************
+		if(m_dib.CreateDIB((LPSTR)(LPCTSTR)fileName,width,height,nBits))
+		{
+			//***********************设置显示新建图像的相关参数***********************	
+			if(!m_dib.IsValid())
+			{
+				AfxMessageBox("新建图像失败!");
+				return;
+			}
+			//设置显示图像的宽度
+			m_dib.SetShowWidth(m_dib.GetWidth());
+			//设置显示图像的高度
+			m_dib.SetShowHeight(m_dib.GetHeight());
+			//保存原始数据
+			m_dib.SaveOriginImage();
+			//***********************其实该句可以不要**********************
+			//保存上一步图像数据
+			m_dib.SavePreImage();//其实该句可以不要！！！
+			//***********************其实该句可以不要**********************
+			//初始化非全屏显示
+			//	m_dib.isFullScreen = false;	
+			//***********************设置显示新建图像的相关参数***********************
+		}
+	}	
+	//刷新屏幕
+ 	Invalidate(1);
+}
+/*
+功能：
+	清空图像
+*/
+void CDIP1View::OnClearImage() 
+{
+	// TODO: Add your command handler code here
+	if(alert(1))
+ 		return;
+	m_dib.Empty();
+	//刷新屏幕
+ 	Invalidate(1);
 }

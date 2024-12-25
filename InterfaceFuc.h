@@ -25,7 +25,6 @@ void cvImShow(IplImage *img,const char* imgName,int flagWindow,int flagWaitKey)
 	if(1 == flagWaitKey)
 		cvWaitKey(0);
 	cvDestroyWindow(imgName);
-	cvReleaseImage(&img);
 }
 
 //检测人脸并用圆形标出

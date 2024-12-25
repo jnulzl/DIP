@@ -5,12 +5,17 @@
 #include "DIP1.h"
 
 #include "MainFrm.h"
+#include <iostream>
+#include <strstream>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+
+#include "DIP1View.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame
@@ -56,21 +61,46 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
+
+	/*m_wndStatusBarCtrl = new CStatusBarCtrl();
+	RECT rec;
+	GetWindowRect(&rec);
+	rec.top = rec.bottom - 20;
+	m_wndStatusBarCtrl->Create(WS_BORDER | WS_VISIBLE | CBRS_BOTTOM, rec, this, 3);
+	int nparts[4] = { 100, 200, 300, -1 };
+	m_wndStatusBarCtrl->SetParts(4, nparts);
+	m_wndStatusBarCtrl->SetText("第一个", 0, 0);
+	m_wndStatusBarCtrl->SetText("第二个", 1, 0);*/
+
 	//创建状态栏
-	/*
-	if (!m_wndStatusBar.Create(this) ||
-		!m_wndStatusBar.SetIndicators(indicators,
-		  sizeof(indicators)/sizeof(UINT)))
-	{
-		TRACE0("Failed to create status bar\n");
-		return -1;      // fail to create
-	}
-	*/
+	//
+	//if (!m_wndStatusBar.Create(this) /*||
+	//	!m_wndStatusBar.SetIndicators(indicators,
+	//	sizeof(indicators) / sizeof(UINT))*/)
+	//{
+	//	TRACE0("Failed to create status bar\n");
+	//	return -1;      // fail to create
+	//}
+	//int nparts[4] = { 100, 200, 300, -1};
+	////CPoint point = CDIP1View::getPixel();
+	//std::strstream ss;
+	//std::string s;
+	//ss << point.x;
+	//s = ss.str();
+	//std::string X = "X = " + s;	
+	//ss << point.y;
+	//s = ss.str();	
+	//std::string Y = "Y = " + s;
+	//m_wndStatusBar.GetStatusBarCtrl().SetParts(4, nparts);
+	//m_wndStatusBar.GetStatusBarCtrl().SetText(X.c_str(), 0, 0);
+	//m_wndStatusBar.GetStatusBarCtrl().SetText(Y.c_str(), 3, 0);
+	
 	// TODO: Delete these three lines if you don't want the toolbar to
 	//  be dockable
 	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
 	EnableDocking(CBRS_ALIGN_ANY);
 	DockControlBar(&m_wndToolBar);
+	
 
 	return 0;
 }

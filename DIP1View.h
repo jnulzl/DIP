@@ -7,7 +7,7 @@
 
 #include "cv.h"
 #include "highgui.h"
-
+#include "DIP1Doc.h"
 
 #include "Dib.h"	// Added by ClassView
 #if _MSC_VER > 1000
@@ -28,7 +28,7 @@ public:
 
 // Operations
 public:
-
+	
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CDIP1View)
@@ -44,11 +44,13 @@ public:
 
 // Implementation
 public:
-	IplImage* m_curImg;
-	IplImage* m_cvImg;
 	//////////////////////////////////////////////////////////////////////////
+	//IplImage* m_curImg;
+	//IplImage* m_cvImg;
 	CCvDIP m_dib;
-	int alert(int temp);
+	int alert(int temp);	
+	//CPoint getxy();
+	//static int getPixel();
 	//////////////////////////////////////////////////////////////////////////
 	virtual ~CDIP1View();
 #ifdef _DEBUG
@@ -137,7 +139,13 @@ protected:
 	afx_msg void OnCvLaplacian();
 	afx_msg void OnCvPcFaceDetection();
 	afx_msg void OnFaceDetectionYushiqi();
-	afx_msg void OnDemo();
+	afx_msg void OnCvSimpleBlur();
+	afx_msg void OnCvMedianBlur();
+	afx_msg void OnCvGaussianBlur();
+	afx_msg void OnCvPlotHist();
+	afx_msg void OnCvHistEqualize();
+	afx_msg void OnNewImage();
+	afx_msg void OnClearImage();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

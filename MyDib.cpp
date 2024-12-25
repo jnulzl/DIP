@@ -2,6 +2,18 @@
 #include "MyDib.h"
 #include <math.h>
 #include "fitsio.h"
+
+
+double logByte(BYTE bt)
+{
+	return log((double)bt);
+}
+
+double sqrtByte(BYTE bt)
+{
+	return sqrt((double)bt);
+}
+
 /*
 功能：
 	获取图像显示宽度
@@ -215,7 +227,6 @@ void MyDib::ShowPreImage()
 		LPBYTE p_Data = GetData();//获取当前图像数据指针
 		memcpy(p_Data,preImageData,GetHeight()*GetLineByte());
 	}
-
 }
 
 /*
@@ -482,7 +493,7 @@ void MyDib::Connv2(LPBYTE m_pdata,float *Template,int tempH,int tempW,double fCo
 			}
 		}
 	memcpy(m_pdata,temp,GetLineByte()*GetHeight());
-	delete temp;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
 }
 /*
 功能：
@@ -555,8 +566,8 @@ void MyDib::SobelEdge()
 		}
 	//将处理后的数据赋给原数据
 	memcpy(pData,temP1,GetLineByte()*GetHeight());
-	delete temP1;//删除一维动态数组temP1
-	delete temP2;//删除一维动态数组temP2
+	delete[] temP1;//删除一维动态数组temP1
+	delete[] temP2;//删除一维动态数组temP2
 }
 
 /*
@@ -592,7 +603,7 @@ void MyDib::RobertEdge()
 				pixel[2] = pData[(i+1)*GetLineByte()+j];
 				pixel[3] = pData[(i+1)*GetLineByte()+j+1];
 
-				temp[i*GetLineByte()+j] = (int)sqrt((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
+				temp[i*GetLineByte()+j] = (int)sqrtByte((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
 											(pixel[1]-pixel[2])*(pixel[1]-pixel[2]));
 			}
 			else
@@ -603,7 +614,7 @@ void MyDib::RobertEdge()
 				pixel[2] = pData[(i+1)*GetLineByte()+3*j];
 				pixel[3] = pData[(i+1)*GetLineByte()+3*(j+1)];
 
-				temp[i*GetLineByte()+3*j] = (int)sqrt((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
+				temp[i*GetLineByte()+3*j] = (int)sqrtByte((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
 											(pixel[1]-pixel[2])*(pixel[1]-pixel[2]));
 				//处理G
 				pixel[0] = pData[i*GetLineByte()+3*j +1];
@@ -611,7 +622,7 @@ void MyDib::RobertEdge()
 				pixel[2] = pData[(i+1)*GetLineByte()+3*j +1];
 				pixel[3] = pData[(i+1)*GetLineByte()+3*(j+1) +1];
 
-				temp[i*GetLineByte()+3*j + 1] = (int)sqrt((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
+				temp[i*GetLineByte()+3*j + 1] = (int)sqrtByte((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
 											(pixel[1]-pixel[2])*(pixel[1]-pixel[2]));
 				//处理B
 				pixel[0] = pData[i*GetLineByte()+3*j +2];
@@ -619,13 +630,13 @@ void MyDib::RobertEdge()
 				pixel[2] = pData[(i+1)*GetLineByte()+3*j +2];
 				pixel[3] = pData[(i+1)*GetLineByte()+3*(j+1) +2];
 
-				temp[i*GetLineByte()+3*j + 2] = (int)sqrt((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
+				temp[i*GetLineByte()+3*j + 2] = (int)sqrtByte((pixel[0]-pixel[3])*(pixel[0]-pixel[3])+
 											(pixel[1]-pixel[2])*(pixel[1]-pixel[2]));
 			}
 		}
 	//将处理后的像素数据(temp)复制给原像素数据
 	memcpy(pData,temp,GetHeight()*GetLineByte());
-	delete temp;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -788,8 +799,8 @@ void MyDib::KrischEdge()
 	
 	//把temP1中的数据赋给原图像数据
 	memcpy(pData,temP1,GetHeight()*GetLineByte());
-	delete temP1;
-	delete temP2;
+	delete[] temP1;
+	delete[] temP2;
 }
 
 /*
@@ -852,7 +863,7 @@ void MyDib::ImageTranslation(int horOff,int verOff)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 	}
 	else
 	{
@@ -920,7 +931,7 @@ void MyDib::ImageMirror()
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -973,7 +984,7 @@ void MyDib::ImageMirror1(int flagSavePreData)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -1017,53 +1028,76 @@ void MyDib::ImageZoom(float ZoomX,float ZoomY)
 void MyDib::ImageTranspose()
 {
 	//************************保存上一步数据*********************
-		SavePreImage();
+		//SavePreImage();
 	//************************保存上一步数据*********************
-	if(GetHeight() !=  GetWidth())
+	/*if(GetHeight() !=  GetWidth())
 	{
-		AfxMessageBox("暂时不能处理宽高不等的图像！");
+		//CString str;
+		//str.Format("%d",GetWidth());
+		AfxMessageBox("暂时不能处理长宽不等的图像！");
 			return ;
-	}
+	}*/
+	
+	AfxMessageBox("转置后的撤销功能仍需改进！！！");
+
 	//设置临时图像缓冲区
 	LPBYTE pData = GetData();
 	UINT LineBytes = GetLineByte();
-	BYTE* temp = new BYTE[GetHeight()*LineBytes];//临时图像缓冲区(一维动态数组)
-	memset(temp,255,GetHeight()*LineBytes);//设定临时图像各像素初值都为255
+	UINT newLineBytes = GetColByte();
+	BYTE* temp = new BYTE[GetWidth()*newLineBytes];//临时图像缓冲区(一维动态数组)
+	memset(temp,255,GetWidth()*newLineBytes);//设定临时图像各像素初值都为255
 	//BYTE Gray;
 	
 	//彩色图像处理的必须变量
 	BYTE R,G,B,Gray;
 	//判断图像是彩色的还是灰色的
 	bool flag;
+	int nBits;
 	if(!IsGrade())
+	{
 		flag = true;//图像是彩色的
+		nBits = 24;
+	}
 	else
+	{
 		flag = false;//图像是灰色的
-	
-		for(int i=0;i<GetHeight();i++)
-			for(int j=0;j<GetWidth();j++)
-			{
-					if(flag)
-					{
-							R = pData[i*LineBytes+3*j];
-							temp[j*LineBytes+3*i] = R;
+		nBits = 8;
+	}
+	//开始转置主程序
+	for(int i=0;i<GetHeight();i++)
+		for(int j=0;j<GetWidth();j++)
+		{
+				if(flag)
+				{
+						R = pData[i*LineBytes+3*j];
+						temp[j*newLineBytes+3*i] = R;
 
-							G = pData[i*LineBytes+3*j + 1];
-							temp[j*LineBytes+3*i + 1] = G;
+						G = pData[i*LineBytes+3*j + 1];
+						temp[j*newLineBytes+3*i + 1] = G;
 
-							B = pData[i*LineBytes+3*j + 2];
-							temp[j*LineBytes+3*i + 2] = B;
-					}
-					else
-					{
-						Gray = pData[i*GetLineByte()+j];
-						temp[j*LineBytes+i] = Gray;
-					}
-			}
-		//将处理后的像素数据(temp)复制给原像素数据
-		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+						B = pData[i*LineBytes+3*j + 2];
+						temp[j*newLineBytes+3*i + 2] = B;
+				}
+				else
+				{
+					Gray = pData[i*GetLineByte()+j];
+					temp[j*newLineBytes+i] = Gray;
+				}
+		}
+	//将处理后的像素数据(temp)复制给原像素数据
+	char *fileName  = (LPSTR)GetFileName();
+	CreateDIB(fileName,(int*)temp,GetHeight(),GetWidth(),nBits,0);
+	//设置显示图像的宽度
+	SetShowWidth(GetWidth());
+	//设置显示图像的高度
+	SetShowHeight(GetHeight());
+	//memcpy(GetData(),temp,GetHeight()*LineBytes);
+	delete[] temp;//删除一维动态数组
 }
+/*
+功能：
+	图像窗口变换
+*/
 
 void MyDib::ImageWindowTranslation(int low,int high)
 {
@@ -1128,7 +1162,7 @@ void MyDib::ImageWindowTranslation(int low,int high)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -1162,23 +1196,23 @@ void MyDib::ImageLog(float coeff)
 					if(flag)
 					{	
 							R = pData[i*LineBytes+3*j];
-							temp[i*LineBytes+3*j]=(int)(coeff*log(1+R));
+							temp[i*LineBytes+3*j]=(int)(coeff*logByte(1+R));
 
 							G = pData[i*LineBytes+3*j + 1];
-							temp[i*LineBytes+3*j + 1]=(int)(coeff*log(1+G));
+							temp[i*LineBytes+3*j + 1]=(int)(coeff*logByte(1+G));
 
 							B = pData[i*LineBytes+3*j + 2];
-							temp[i*LineBytes+3*j + 1]=(int)(coeff*log(1+B));
+							temp[i*LineBytes+3*j + 1]=(int)(coeff*logByte(1+B));
 					}
 					else
 					{
 						Gray = pData[i*LineBytes+j];
-						temp[i*LineBytes+j]=(int)(coeff*log(1+Gray));
+						temp[i*LineBytes+j]=(int)(coeff*logByte(1+Gray));
 					}
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -1228,7 +1262,7 @@ void MyDib::ImagePower(float coeff,float gamma)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 /*
 功能：
@@ -1253,7 +1287,7 @@ void MyDib::ImageAreaAverage(int n)
 	for(int i=0;i<n*n;i++)
 		temp[i]=1;
 	Connv2(pData,temp,n,n,1.0/(n*n));
-	delete temp;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
 }
 /*
 功能：
@@ -1341,8 +1375,8 @@ void MyDib::ImageMedianFilter(int tempH,int tempW,int type)
 		}
 	//将处理完后的像素数据temp复制给原像素数据m_pdata
 	memcpy(m_pdata,temp,GetLineByte()*GetHeight());
-	delete temp;//删除一维动态数组
-	delete Template;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
+	delete[] Template;//删除一维动态数组
 	//删除动态二维数组
 	for(int index=0;index<tempH;index++)
 		delete[] myTemplate[index];
@@ -1419,8 +1453,8 @@ void MyDib::ImagePlusMedianFilter(int tempH,int tempW)
 		}
 	//将处理完后的像素数据temp复制给原像素数据m_pdata
 	memcpy(m_pdata,temp,GetLineByte()*GetHeight());
-	delete temp;//删除一维动态数组
-	delete Template;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
+	delete[] Template;//删除一维动态数组
 	//删除动态二维数组
 	for(int index=0;index<tempH;index++)
 		delete[] myTemplate[index];
@@ -1484,7 +1518,7 @@ void MyDib::AddRandNoise(float radio)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 	memcpy(pData,temp,GetHeight()*LineBytes);
-	delete temp;//删除一维动态数组
+	delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -1542,7 +1576,7 @@ void MyDib::AddSaltPepperNoise(float radio)
 			}
 		//将处理后的像素数据(temp)复制给原像素数据
 		memcpy(pData,temp,GetHeight()*LineBytes);
-		delete temp;//删除一维动态数组
+		delete[] temp;//删除一维动态数组
 }
 
 /*
@@ -1584,7 +1618,7 @@ void MyDib::ImageProfileDetect()
 		}
 	//将处理完后的像素数据temp复制给原像素数据m_pdata
 	memcpy(m_pdata,temp,GetLineByte()*GetHeight());
-	delete temp;//删除一维动态数组	
+	delete[] temp;//删除一维动态数组	
 }
 
 /*
@@ -1711,7 +1745,7 @@ void MyDib::GetRGBComponent(int tempRGB)
 	//再次获取原图像数据指针
 	pData = GetData();
 	memcpy(pData,temp,GetWidth()*GetHeight());
-	delete temp;//删除临时缓存区
+	delete[] temp;//删除临时缓存区
 }
 /*
 功能：
@@ -1741,7 +1775,7 @@ void MyDib::RColor()
 	//再次获取原图像数据指针
 	pData = GetData();
 	memcpy(pData,temp,GetWidth()*GetHeight());
-	delete temp;//删除临时缓存区
+	delete[] temp;//删除临时缓存区
 }
 */
 /*
@@ -1770,7 +1804,7 @@ void MyDib::GColor()
 	//再次获取原图像数据指针
 	pData = GetData();
 	memcpy(pData,temp,GetWidth()*GetHeight());
-	delete temp;//删除临时缓存区
+	delete[] temp;//删除临时缓存区
 }
 */
 /*
@@ -1799,7 +1833,7 @@ void MyDib::BColor()
 	//再次获取原图像数据指针
 	pData = GetData();
 	memcpy(pData,temp,GetWidth()*GetHeight());
-	delete temp;//删除临时缓存区
+	delete[] temp;//删除临时缓存区
 }
 */
 /*
@@ -2078,7 +2112,7 @@ void MyDib::Equalization(LPBYTE originData,int coef,int num)
 				int gray = (int)tempData[i*GetWidth()+j];
 				originData[i*GetLineByte()+coef*j + num] = (BYTE)tempImageHistogram[gray];
 		}
-	delete tempData;//删除临时数据
+	delete[] tempData;//删除临时数据
 }	
 
 /*
@@ -2108,7 +2142,7 @@ void MyDib::RgbToHSI()
 	//再次获取原图像数据指针
 	pData = GetData();
 	memcpy(pData,temp,GetWidth()*GetHeight());
-	delete temp;//删除临时缓存区
+	delete[] temp;//删除临时缓存区
 }
 
 /*
@@ -2178,7 +2212,7 @@ void MyDib::ImageFourier()
 	for(i=0;i<GetHeight();i++)
 		for(j=0;j<GetWidth();j++)
 			pData[i*GetLineByte()+j] = (BYTE)temp[i*GetLineByte()+j];
-	delete temp;
+	delete[] temp;
 	*/
 
 
@@ -2202,10 +2236,10 @@ void MyDib::ImageFourier()
 		{
 			double temp1 = pTd[i*sizeof(CplexNum)*GetWidth()+j].re;
 			double temp2 = pTd[i*sizeof(CplexNum)*GetWidth()+j].im;
-			pData[i*GetLineByte()+j] = (BYTE)(sqrt(temp1*temp1+temp2+temp2));
+			pData[i*GetLineByte()+j] = (BYTE)(sqrtByte(temp1*temp1+temp2+temp2));
 		}
-		delete pTd;
-		delete pFd;*/
+		delete[] pTd;
+		delete[] pFd;*/
 }
 /*
 功能：
@@ -2692,7 +2726,7 @@ void MyDib::ImageErosion(int Structure[3][3])
 						if(0 != Structure[k][t])
 							pData[(i-1 + k)*GetLineByte()+(j-1+t)] = backGround;
 		}
-	delete temp;
+	delete[] temp;
 }
 
 /*
@@ -2777,5 +2811,5 @@ void MyDib::ImageDilation(int Structure[3][3])
 						if(0 != Structure[k][t])
 							pData[(i-1 + k)*GetLineByte()+(j-1+t)] = 255 - backGround;
 		}
-	delete temp;
+	delete[] temp;
 }

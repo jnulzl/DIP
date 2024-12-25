@@ -21,6 +21,7 @@
 #define IDR_MOUSE_RIGHT                 145
 #define IDD_HIST_DIALOG                 146
 #define IDC_CURSOR1                     149
+#define IDD_DIALOG14                    150
 #define IDC_hor                         1000
 #define IDC_ver                         1001
 #define IDC_SPIN_hor                    1004
@@ -52,6 +53,11 @@
 #define IDC_WIDTH                       1036
 #define IDC_HEIGHT                      1037
 #define IDC_COORD                       1038
+#define IDC_IMAGEWIDTH                  1039
+#define IDC_IMAGEHEIGHT                 1040
+#define IDC_FILEPATH                    1042
+#define IDC_BUTTONSCAN                  1043
+#define IDC_NBITS                       1044
 #define ID_OPEN_IMAGE                   32771
 #define ID_DIP                          32772
 #define ID_SAVE_IMAGE                   32773
@@ -129,16 +135,23 @@
 #define ID_CV_LAPLACIAN                 32870
 #define ID_CV_PCFACEDETECTION           32871
 #define ID_FACE_DETECTIONYUSHIQI        32872
-#define IDDEMO                          32873
+#define ID_CV_SIMPLEBLUR                32873
+#define ID_CVSIMPLENOSCALEBLUR          32874
+#define ID_CVMEDIANBLUR                 32875
+#define ID_CVGAUSSIANBLUR               32876
+#define ID_CVPLOTHIST                   32878
+#define CD_CVHISTEqualize               32879
+#define ID_NEW_IMAGE                    32880
+#define ID_CLEAR_IMAGE                  32881
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         32876
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_COMMAND_VALUE         32882
+#define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

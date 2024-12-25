@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "DIP1.h"
 #include "CvDIP.h"
+#include <string>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,7 +16,6 @@ static char THIS_FILE[] = __FILE__;
 #include "highgui.h"
 #include  "InterfaceFuc.h"
 #include "facedetect-dll.h"
-
 /////////////////////////////////////////////////////////////////////////////
 // CCvDIP
 
@@ -29,14 +29,33 @@ CCvDIP::~CCvDIP()
 
 /*功能：
 	利用OpenCV函数打开图像
-
 */
 void CCvDIP::LoadFileFromOpenCV(LPCTSTR lpszPath)
 {
 	//1、获取图像路径
 	char *fileName  = (LPSTR)lpszPath;
-	//2、打开图像
-	IplImage* imgOrigin = cvLoadImage(fileName);
+	//2、打开图像		
+	IplImage* imgOrigin;
+	std::string path = fileName;//图像完整路径
+	std::string extName = path.substr(path.find_last_of('.') + 1);//图像扩展名
+	if (("IMG" == extName) || ("img" == extName))
+	{
+		//图像名
+		std::string imgN = path.substr(path.find_last_of('\\') + 1, path.find_last_of('.') - path.find_last_of('\\') - 1);
+		std::string imgName = path.substr(0, path.find_last_of('\\')) + "\\" + imgN + ".png";
+		//如果该IMG图像对应的png图像不存在将其换为png图像
+		if (!PathFileExists(imgName.c_str()))			
+		{
+			if (vicar2png(lpszPath))			
+				imgOrigin = cvLoadImage(imgName.c_str());
+		}
+		else
+			imgOrigin = cvLoadImage(imgName.c_str());
+
+	}
+	else
+		imgOrigin = cvLoadImage(fileName);
+	
 	//3、获取图像数据
 	int* m_pData = (int*)(imgOrigin->imageData);
 	//4、获取图像的宽度
@@ -50,7 +69,49 @@ void CCvDIP::LoadFileFromOpenCV(LPCTSTR lpszPath)
 	ImageMirror1(0);//垂直镜像,其中的0表示不保存上一步的数据
 	return;
 }
+/*功能：
+	将IMG图像转换成png图像
+*/
+bool CCvDIP::vicar2png(LPCTSTR lpszPath)
+{
+	if (!PathFileExists(lpszPath))
+	{
+		AfxMessageBox("文件不存在");
+		return false;
+	}
+	std::string temp = "vicar2png -f ";
+	std::string imgPath = temp + (LPSTR)lpszPath;	
 
+	//AfxMessageBox(imgPath.c_str());		
+	//ShellExecute(NULL, NULL, "vicar2png", imgPath.c_str(), NULL, SW_HIDE|SW_SHOWNORMAL);
+	
+	//WinExec(_T("vicar2png -f C:\\Users\\jnulzl\\Desktop\\res\\N1715984373_1.IMG"), SW_MINIMIZE);
+
+	//if (system_hide(const_cast<char*>(imgPath.c_str())))
+	//	return true;
+	//else
+	//	return false;
+	
+	system(imgPath.c_str());
+	
+}
+/*功能：
+	调用命令行命令而不显示命令行窗口(12.16晚，暂未成功)
+*/
+BOOL CCvDIP::system_hide(char* CommandLine)
+{
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si;
+	memset(&si, 0, sizeof(si));
+	si.cb = sizeof(si);
+	si.wShowWindow = SW_HIDE;
+	//si.dwFlags = STARTF_USESHOWWINDOW;
+	si.dwFlags = STARTF_USESHOWWINDOW;	
+	if (CreateProcess(NULL, CommandLine, NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi))
+		return   true;
+	else
+		return false;
+}
 /*功能：
 	利用OpenCV函数打开图像
 */
@@ -155,13 +216,13 @@ void CCvDIP::cvDataToBmp(IplImage *m_curImg,int flag)
 }
 
 /*功能：
-	OpenCV自带的人脸检测
+	OpenCV人脸检测
 */
 IplImage* CCvDIP::cvFaceDec(IplImage* image,int* faceNum)
 {
 	static CvHaarClassifierCascade* cascade = 0;
 	static CvMemStorage* storage = 0;
-	const char* cascade_name = "D:\\Program Files\\OpenCV\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
+	const char* cascade_name = "E:\\Program Files (x86)\\OpenCV\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
 
 	//加载人脸检测所用的分类器
 	cascade = (CvHaarClassifierCascade*)cvLoad(cascade_name, 0, 0, 0 );   
@@ -193,25 +254,21 @@ IplImage* CCvDIP::cvFaceDecYuShiQi(IplImage* Color,int* faceNum)
 	int *pResults = NULL; 
 	//!!! 输入图像必须是一幅灰度图像(单通道图像)
 	//!!! 不要释放结果pResults !!!
-	pResults = facedetect_multiview_reinforce((unsigned char*)(gray->imageData), gray->width, 
-												gray->height, gray->widthStep,1.3f, 4, 24);
+	pResults = facedetect_multiview_reinforce((unsigned char*)(gray->imageData), gray->width, gray->height, gray->widthStep,
+											   1.3f, 4, 24);
 	//记录检测到的人脸个数
-	*faceNum = (pResults ? *pResults : 0);//pResults(字节组成):1|6|6|6，
-										  //第1个字节表示检测到的人脸数目
-	
+	*faceNum = (pResults ? *pResults : 0);
+
 	//输出检测结果
-	CvFont font = cvFont(1.5);
-	CString str1;
-	const char* temp;
 	for(int i = 0; i < (pResults ? *pResults : 0); i++)
 	{
         short * p = ((short*)(pResults+1))+6*i;
-		int x = p[0];//人脸矩形左上角x坐标
-		int y = p[1];//人脸矩形左上角y坐标
-		int w = p[2];//人脸矩形的宽度
-		int h = p[3];//人脸矩形的高度
+		int x = p[0];
+		int y = p[1];
+		int w = p[2];
+		int h = p[3];
 		int neighbors = p[4];
-		int angle = p[5];//人脸角度
+		int angle = p[5];
 		
 		CvPoint center;
 		int radius;
@@ -219,14 +276,6 @@ IplImage* CCvDIP::cvFaceDecYuShiQi(IplImage* Color,int* faceNum)
 		center.y = cvRound((y + h*0.5));
 		radius = cvRound((w + h)*0.25);
 		cvCircle(Color, center, radius, colors[i%8], 3, 8, 0 );
-		//在图像中显示人脸的角度
-
-		str1.Format("Angle:%d",angle);
-		temp = (LPSTR)(LPCSTR)str1;		
-		cvPutText(Color,temp,cvPoint(x - w*0.2,y),&font,colors[7-i%8]);
-// 		str1.Format("Neighbors:%d",neighbors);
-//		temp = (LPSTR)(LPCSTR)str1;	
-//		cvPutText(Color,temp,cvPoint(x - w*0.2,y),&font,colors[7-i%8]);
 	}
 	return Color;
 }
@@ -338,17 +387,34 @@ IplImage* CCvDIP::cvSobelEdge(IplImage *img)
 	//************************保存上一步数据*********************
 	//	SavePreImage();
 	//************************保存上一步数据*********************
-	//加载图像
-	IplImage *sobel=cvCreateImage(cvGetSize(img),IPL_DEPTH_16S,1);
+	IplImage *Gray = cvCreateImage(cvGetSize(img),IPL_DEPTH_16S,img->nChannels);
 	//Sobel边缘检测
-	cvSobel(img,sobel,1,0,3);
+	cvSobel(img,Gray,1,0);
 	//对处理后的图像数据取绝对值
-	IplImage *sobel8u=cvCreateImage(cvGetSize(sobel),IPL_DEPTH_8U,1);
-	cvConvertScaleAbs(sobel,sobel8u,1,0);
-	cvReleaseImage(&sobel);
-	return sobel8u;
+	IplImage *Laplace8u=cvCreateImage(cvGetSize(Gray),IPL_DEPTH_8U,img->nChannels);
+	cvConvertScaleAbs(Gray,Laplace8u);
+	cvReleaseImage(&Gray);
+
+	return Laplace8u;
 }
 
+/*
+功能：
+	OpenCV Canny边缘检测；
+参数：
+	img必须是灰度图
+*/
+IplImage* CCvDIP::cvCannyEdge(IplImage *img)
+{
+	//************************保存上一步数据*********************
+	//	SavePreImage();
+	//************************保存上一步数据*********************
+	IplImage *Gray = cvCreateImage(cvGetSize(img),IPL_DEPTH_8U,1);
+	//Sobel边缘检测
+	cvCanny(img,Gray,50,150);
+	return Gray;
+}
+		
 
 /*功能：
 	OpenCV Laplacian边缘检测
@@ -358,15 +424,14 @@ IplImage* CCvDIP::cvLaplacianEdge(IplImage* img)
 	//************************保存上一步数据*********************
 	//	SavePreImage();
 	//************************保存上一步数据*********************  
-	IplImage *LaplaceX=cvCreateImage(cvGetSize(img),IPL_DEPTH_16S,1);
+	IplImage *Gray = cvCreateImage(cvGetSize(img),IPL_DEPTH_16S,img->nChannels);
 	//Laplace边缘检测
-	cvLaplace(img,LaplaceX,3);
+	cvLaplace(img,Gray);
 	//对处理后的图像数据取绝对值
-	IplImage *Laplace8u=cvCreateImage(cvGetSize(LaplaceX),IPL_DEPTH_8U,1);
-	cvConvertScaleAbs(LaplaceX,Laplace8u,1,0);
-	//销毁临时变量
-	cvReleaseImage(&img);
-	cvReleaseImage(&LaplaceX);
+	IplImage *Laplace8u=cvCreateImage(cvGetSize(Gray),IPL_DEPTH_8U,img->nChannels);
+	cvConvertScaleAbs(Gray,Laplace8u);
+	cvReleaseImage(&Gray);
+
 	return Laplace8u;
 }
 
@@ -379,32 +444,147 @@ void CCvDIP::cvMySplit(IplImage *pImg)
 	//	SavePreImage();
 	//************************保存上一步数据*********************   
     IplImage *rImg,*bImg,*gImg;   
-	
+	const char* RWindowName = "R分量";
+	const char* GWindowName = "G分量";
+	const char* BWindowName = "B分量";
     rImg=cvCreateImage(cvSize(pImg->width,pImg->height),pImg->depth,1);  
-    gImg=cvCreateImage(cvSize(pImg->width,pImg->height),pImg->depth,1);  
     bImg=cvCreateImage(cvSize(pImg->width,pImg->height),pImg->depth,1);  
+    gImg=cvCreateImage(cvSize(pImg->width,pImg->height),pImg->depth,1);  
 	cvSplit(pImg,bImg,gImg,rImg,0);  
-    
-	const char* RName = "R分量";
-	const char* GName = "G分量";
-	const char* BName = "B分量";
-	cvNamedWindow(RName,0);
-	cvShowImage(RName,rImg);
-	
-	cvNamedWindow(GName,0);
-	cvShowImage(GName,gImg);
-	
-	cvNamedWindow(BName,0);
-	cvShowImage(BName,bImg);
-	
-	cvWaitKey(0);
-	cvDestroyWindow(RName);
+        
+	cvNamedWindow(RWindowName,0);
+	cvNamedWindow(GWindowName,0);
+	cvNamedWindow(BWindowName,0);
+	//显示图像
+	cvShowImage(RWindowName,rImg);
+	cvShowImage(GWindowName,gImg);
+	cvShowImage(BWindowName,bImg);
+	//改变窗口尺寸
+	cvResizeWindow(RWindowName,pImg->width,pImg->height);
+	cvResizeWindow(GWindowName,pImg->width,pImg->height);
+	cvResizeWindow(BWindowName,pImg->width,pImg->height);
+	//程序暂停
+	cvWaitKey();
+	//释放图像
 	cvReleaseImage(&rImg);
-	cvDestroyWindow(GName);
-	cvReleaseImage(&gImg);
-	cvDestroyWindow(BName);
 	cvReleaseImage(&bImg);
-//    cvImShow(rImg,"R分量",0);
-//	cvImShow(gImg,"G分量",0);  
-//     cvImShow(bImg,"B分量",0); 	
+	cvReleaseImage(&gImg);
+	cvDestroyWindow(RWindowName);
+	cvDestroyWindow(GWindowName);
+	cvDestroyWindow(BWindowName);
+}
+/*
+功能：
+	OpenCV 图像滤波
+参数：
+	img(彩色或者灰度图)
+*/
+IplImage* CCvDIP::cvSmoothBlur(IplImage *img,int smoothType,int templateWidth,int templateHeight)
+{
+	IplImage *smoothImg = cvCreateImage(cvGetSize(img),IPL_DEPTH_8U,img->nChannels);
+    cvSmooth(img,smoothImg,smoothType,templateWidth,templateHeight);
+	return smoothImg;
+}
+
+/*
+功能：
+	OpenCV 绘制灰度图像直方图
+*/
+IplImage* CCvDIP::plotGrayHistogram(IplImage* grayImage,CvScalar color)
+{
+
+	int size=256;
+	float maxPixelValue=0;	
+	CvHistogram* hist=cvCreateHist(1,&size,CV_HIST_ARRAY);
+	cvCalcHist(&grayImage,hist,0,NULL);	
+	cvGetMinMaxHistValue(hist,NULL,&maxPixelValue,NULL,NULL);
+	IplImage* dst=cvCreateImage(cvSize(400,300),8,3);
+	cvSet(dst,cvScalarAll(255),0);
+	double bin_width=(double)dst->width/size;
+	double bin_unith=(double)dst->height/maxPixelValue;
+	for(int i=0;i <256;i++)
+	{
+		CvPoint p0=cvPoint(i*bin_width,dst->height);
+		CvPoint p1=cvPoint((i+1)*bin_width,dst->height-cvGetReal1D(hist->bins,i)*bin_unith);
+		cvRectangle(dst,p0,p1,color,-1);
+	}
+	return dst;
+}
+
+/*
+功能：
+	OpenCV 绘制彩色图像直方图
+*/
+void CCvDIP::plotColorHistogram(IplImage* colorImage)
+{
+	IplImage *rImg,*bImg,*gImg;   
+	const char* RWindowName = "R分量直方图";
+	const char* GWindowName = "G分量直方图";
+	const char* BWindowName = "B分量直方图";
+    rImg=cvCreateImage(cvSize(colorImage->width,colorImage->height),colorImage->depth,1);  
+    bImg=cvCreateImage(cvSize(colorImage->width,colorImage->height),colorImage->depth,1);  
+    gImg=cvCreateImage(cvSize(colorImage->width,colorImage->height),colorImage->depth,1);  
+	cvSplit(colorImage,bImg,gImg,rImg,0);  
+
+	cvNamedWindow(RWindowName,0);
+	cvNamedWindow(GWindowName,0);
+	cvNamedWindow(BWindowName,0);
+	cvShowImage(RWindowName,plotGrayHistogram(rImg,cvScalar(0,0,255)));
+	cvShowImage(GWindowName,plotGrayHistogram(gImg,cvScalar(0,255,0)));
+	cvShowImage(BWindowName,plotGrayHistogram(bImg,cvScalar(255,0,0)));
+	cvWaitKey();
+	//释放图像
+	cvReleaseImage(&rImg);
+	cvReleaseImage(&bImg);
+	cvReleaseImage(&gImg);
+	cvDestroyWindow(RWindowName);
+	cvDestroyWindow(GWindowName);
+	cvDestroyWindow(BWindowName);	
+}
+
+/*
+功能：
+	OpenCV 绘制图像直方图
+*/
+void CCvDIP::plotHistogram(IplImage* Image)
+{
+	if(1 == Image->nChannels)
+		cvImShow(plotGrayHistogram(Image),"灰度直方图",0);
+	else
+		plotColorHistogram(Image);
+}
+
+/*
+功能：
+	OpenCV 直方图均衡化
+*/
+IplImage* CCvDIP::HistEqualize(IplImage *Image)
+{
+	//IplImage* dst = cvCreateImage(cvGetSize(grayImage),IPL_DEPTH_8U,1);
+
+	if(1 == Image->nChannels)
+		cvEqualizeHist(Image,Image);
+	else
+	{
+		IplImage *rImg,*bImg,*gImg;   
+	
+		rImg=cvCreateImage(cvSize(Image->width,Image->height),Image->depth,1);  
+		bImg=cvCreateImage(cvSize(Image->width,Image->height),Image->depth,1);  
+		gImg=cvCreateImage(cvSize(Image->width,Image->height),Image->depth,1);  
+		cvSplit(Image,bImg,gImg,rImg,0);  
+		
+		//对分量进行直方图均衡化
+		cvEqualizeHist(rImg,rImg);
+		cvEqualizeHist(gImg,gImg);
+		cvEqualizeHist(bImg,bImg);
+				
+		cvMerge(bImg,gImg,rImg,0,Image);
+
+		//释放图像
+		cvReleaseImage(&rImg);
+		cvReleaseImage(&bImg);
+		cvReleaseImage(&gImg);
+
+	}
+	return Image;	
 }

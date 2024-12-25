@@ -5,6 +5,8 @@
 #ifndef _MyDib_
 #define _MyDib_
 
+
+
 class MyDib:public PinYuLuBoDib
 {
 public:
