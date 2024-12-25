@@ -65,3 +65,12 @@ target/
 *.1.tlog
 *.txt
 *.exe.recipe
+
+*.bsc
+*.ilk
+*.pch
+*.pdb
+*.res
+*.tlog
+
+
